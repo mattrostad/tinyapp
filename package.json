@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/mattrostad/tinyapp/issues"
   },
-  "homepage": "https://github.com/mattrostad/tinyapp#readme"
+  "homepage": "https://github.com/mattrostad/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
 }
