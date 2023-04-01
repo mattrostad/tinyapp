@@ -15,7 +15,9 @@ app.get("/urls", (req, res) => {
 });
 
 
-
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
 
 app.get("/set", (req, res) => {
   const a = 1;
