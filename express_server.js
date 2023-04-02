@@ -23,56 +23,65 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
-app.get("/urls", (req, res) => {
+//POST REQUESTS
+
+app.post("/urls", (request, response) => {
+  console.log(request.body); // Log the POST request body to the console
+  const key = generateRandomString();
+  urlDatabase[key] = request.body.longURL;
+  console.log(urlDatabase);
+  response.redirect(`/urls/${key}`);
+});
+
+app.post("/urls/:id/delete", (request, response) => {
+  delete urlDatabase[request.params.id];
+  response.redirect(`/urls`);
+});
+
+//GET REQUESTS
+app.get("/u/:id", (request, response) => {
+  const longURL = urlDatabase[request.params.id];
+  response.redirect(longURL);
+});
+
+app.get("/urls", (request, response) => {
   const templateVars = { urls: urlDatabase };
-  res.render("urls_index", templateVars);
+  response.render("urls_index", templateVars);
 });
 
 //Add a GET Route to Show the Form
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+app.get("/urls/new", (request, response) => {
+  response.render("urls_new");
 });
 
-app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  const key = generateRandomString()
-  urlDatabase[key] = req.body.longURL
-  console.log(urlDatabase)
-  res.redirect(`/urls/${key}`); 
-});
-
-app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id]
-  res.redirect(longURL);
-});
-
-app.get("/set", (req, res) => {
+app.get("/set", (request, response) => {
   const a = 1;
-  res.send(`a = ${a}`);
+  response.send(`a = ${a}`);
 });
 
-app.get("/urls/:id", (req, res) => {
-  const id = req.params.id;
+app.get("/urls/:id", (request, response) => {
+  const id = request.params.id;
   const templateVars = {
-    id: req.params.id,
-    longURL: urlDatabase[id] /* What goes here? */,
+    id: request.params.id,
+    longURL: urlDatabase[id],
   };
-  res.render("urls_show", templateVars);
-});
-app.get("/fetch", (req, res) => {
-  res.send(`a = ${a}`);
+  response.render("urls_show", templateVars);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+app.get("/fetch", (request, response) => {
+  response.send(`a = ${a}`);
 });
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
+app.get("/hello", (request, response) => {
+  response.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+app.get("/", (request, response) => {
+  response.send("Hello!");
+});
+
+app.get("/urls.json", (request, response) => {
+  response.json(urlDatabase);
 });
 
 app.listen(PORT, () => {

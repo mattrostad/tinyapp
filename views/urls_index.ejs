@@ -23,16 +23,17 @@
       <table class="table">
         <thead>
           <tr>
-            <th scope="col">Short URL ID</th>
+            <th scope="col">Short URL ID</th> 
             <th scope="col">Long URL</th>
           </tr>
         </thead>
         <tbody>
           <% for (let id in urls) { %>
-            <tr>
-              <td><%= id %></td>
-              <td><a href='#'><%= urls[id] %></a></td>
-            </tr>
+              <tr>
+                <td><%= id %></td>
+                <td><a href='#'><%= urls[id] %></a></td>
+                <td> <form method="POST" action="/urls/<%= id %>/delete"> <button type="submit" class="btn btn-primary">Delete</button></form></td>
+              </tr>
           <% } %>
         </tbody>
       </table>
