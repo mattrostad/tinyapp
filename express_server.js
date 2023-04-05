@@ -33,6 +33,11 @@ app.post("/urls", (request, response) => {
   response.redirect(`/urls/${key}`);
 });
 
+app.post("/urls/:id", (request, response) => {
+  urlDatabase[request.params.id] = request.body.longURL
+  response.redirect(`/urls`);
+});
+
 app.post("/urls/:id/delete", (request, response) => {
   delete urlDatabase[request.params.id];
   response.redirect(`/urls`);
