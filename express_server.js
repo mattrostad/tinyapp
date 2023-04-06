@@ -1,9 +1,13 @@
 const express = require("express");
+const cookieParser = require('cookie-parser')
 const app = express();
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser())
+
+
 
 function generateRandomString() {
   let result = "";
@@ -49,20 +53,32 @@ app.post("/login", (request, response) => {
   response.redirect(`/urls`)
 });
 
+app.post("/logout", (request, response) => {
+  response.clearCookie("username")
+  response.redirect("/urls")
+})
+
 //GET REQUESTS
+
 app.get("/u/:id", (request, response) => {
   const longURL = urlDatabase[request.params.id];
   response.redirect(longURL);
 });
 
 app.get("/urls", (request, response) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { 
+    urls: urlDatabase , 
+    username: request.cookies["username"],
+  };
   response.render("urls_index", templateVars);
 });
 
 //Add a GET Route to Show the Form
 app.get("/urls/new", (request, response) => {
-  response.render("urls_new");
+  const templateVars = { 
+    username: request.cookies["username"],
+  };
+  response.render("urls_new", templateVars);
 });
 
 app.get("/set", (request, response) => {
