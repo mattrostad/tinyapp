@@ -43,6 +43,12 @@ app.post("/urls/:id/delete", (request, response) => {
   response.redirect(`/urls`);
 });
 
+app.post("/login", (request, response) => {
+  const username = request.body.username
+  response.cookie('username', username)
+  response.redirect(`/urls`)
+});
+
 //GET REQUESTS
 app.get("/u/:id", (request, response) => {
   const longURL = urlDatabase[request.params.id];
