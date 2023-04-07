@@ -1,5 +1,6 @@
 const express = require("express");
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
+const { response } = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -59,6 +60,13 @@ app.post("/logout", (request, response) => {
 })
 
 //GET REQUESTS
+app.get("/register", (request, response) => {
+  const templateVars = {  
+    username: request.cookies["username"],
+  };
+  response.render("urls_registration", templateVars)
+})
+
 
 app.get("/u/:id", (request, response) => {
   const longURL = urlDatabase[request.params.id];
