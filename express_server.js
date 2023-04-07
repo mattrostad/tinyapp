@@ -85,7 +85,7 @@ app.post("/urls/:id/delete", (request, response) => {
 });
 
 app.post("/login", (request, response) => {
-  const username = request.body.username;
+  const urers = request.body.username;
   response.cookie("user_id", username);
   response.redirect(`/urls`);
 });
@@ -96,6 +96,14 @@ app.post("/logout", (request, response) => {
 });
 
 //GET REQUESTS
+app.get("/login", (request, response) => {
+  const templateVars = {
+    urls: urlDatabase,
+    user: null,
+  };
+  response.render("urls_login", templateVars);
+});
+
 app.get("/register", (request, response) => {
   const templateVars = {
     user: null,
@@ -111,8 +119,6 @@ app.get("/u/:id", (request, response) => {
 app.get("/urls", (request, response) => {
   const username = request.cookies["user_id"];
   const user = users[username];
-  console.log(username);
-  console.log(user);
   const templateVars = {
     urls: urlDatabase,
     user: user,
