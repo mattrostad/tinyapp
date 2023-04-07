@@ -8,7 +8,18 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
 
-
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
 
 function generateRandomString() {
   let result = "";
@@ -29,6 +40,18 @@ const urlDatabase = {
 };
 
 //POST REQUESTS
+app.post("/register", (request, response) => {
+  const user_id = generateRandomString()
+  const {email, password} = request.body
+  users[user_id] = {
+    id: user_id,
+    email,
+    password
+  }
+  console.log(users)
+  response.cookie('user_id', user_id)
+  response.redirect(`/urls`)
+})
 
 app.post("/urls", (request, response) => {
   console.log(request.body); // Log the POST request body to the console
@@ -50,20 +73,19 @@ app.post("/urls/:id/delete", (request, response) => {
 
 app.post("/login", (request, response) => {
   const username = request.body.username
-  response.cookie('username', username)
+  response.cookie('user_id', username)
   response.redirect(`/urls`)
 });
 
 app.post("/logout", (request, response) => {
-  response.clearCookie("username")
+  response.clearCookie("user_id")
   response.redirect("/urls")
 })
 
 //GET REQUESTS
 app.get("/register", (request, response) => {
   const templateVars = {  
-    username: request.cookies["username"],
-  };
+    user: null}
   response.render("urls_registration", templateVars)
 })
 
@@ -74,9 +96,13 @@ app.get("/u/:id", (request, response) => {
 });
 
 app.get("/urls", (request, response) => {
+  const username = request.cookies["user_id"]
+  const user = users[username]
+  console.log(username)
+  console.log(user)
   const templateVars = { 
     urls: urlDatabase , 
-    username: request.cookies["username"],
+    user: user
   };
   response.render("urls_index", templateVars);
 });
@@ -84,7 +110,7 @@ app.get("/urls", (request, response) => {
 //Add a GET Route to Show the Form
 app.get("/urls/new", (request, response) => {
   const templateVars = { 
-    username: request.cookies["username"],
+    username: request.cookies["user_id"],
   };
   response.render("urls_new", templateVars);
 });

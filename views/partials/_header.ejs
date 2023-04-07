@@ -15,7 +15,7 @@
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
 
 
-<% if (!username) { %>
+<% if (!user) { %>
 
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
@@ -41,7 +41,7 @@
           <form class="form-inline" action="/logout" method="POST">
           <div class="form-group mb-2 mx-auto">
             <label>
-              <%= username %>
+              <%= user.email %>
             </label>
             <button type="submit" class="btn btn-outline-dark">Logout</button>
           </div>
