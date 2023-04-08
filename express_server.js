@@ -32,8 +32,6 @@ function generateRandomString() {
   return result;
 }
 
-console.log(generateRandomString()); // Example output: "G4t9Fj"
-
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
@@ -85,14 +83,22 @@ app.post("/urls/:id/delete", (request, response) => {
 });
 
 app.post("/login", (request, response) => {
-  const urers = request.body.username;
-  response.cookie("user_id", username);
+const email = request.body.email
+const password = request.body.password
+const user = getUserByEmail(email)
+  if(!user) {
+    return response.status(403).send("Email not found")
+  }
+  if (user.password !== password){
+    return response.status(403).send("Password does not match.")
+  }
+  response.cookie("user_id", user.id);
   response.redirect(`/urls`);
 });
 
 app.post("/logout", (request, response) => {
   response.clearCookie("user_id");
-  response.redirect("/urls");
+  response.redirect("/login");
 });
 
 //GET REQUESTS
@@ -128,8 +134,10 @@ app.get("/urls", (request, response) => {
 
 //Add a GET Route to Show the Form
 app.get("/urls/new", (request, response) => {
+  const username = request.cookies["user_id"];
+  const user = users[username];
   const templateVars = {
-    username: request.cookies["user_id"],
+    user: user,
   };
   response.render("urls_new", templateVars);
 });
