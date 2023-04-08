@@ -65,10 +65,12 @@ app.post("/register", (request, response) => {
 });
 
 app.post("/urls", (request, response) => {
-  console.log(request.body); // Log the POST request body to the console
+  const username = request.cookies["user_id"];
+  if(!username) {
+    return response.send("Please register and sign in to shorten URLs")
+  }
   const key = generateRandomString();
   urlDatabase[key] = request.body.longURL;
-  console.log(urlDatabase);
   response.redirect(`/urls/${key}`);
 });
 
@@ -83,14 +85,14 @@ app.post("/urls/:id/delete", (request, response) => {
 });
 
 app.post("/login", (request, response) => {
-const email = request.body.email
-const password = request.body.password
-const user = getUserByEmail(email)
-  if(!user) {
-    return response.status(403).send("Email not found")
+  const email = request.body.email;
+  const password = request.body.password;
+  const user = getUserByEmail(email);
+  if (!user) {
+    return response.status(403).send("Email not found");
   }
-  if (user.password !== password){
-    return response.status(403).send("Password does not match.")
+  if (user.password !== password) {
+    return response.status(403).send("Password does not match.");
   }
   response.cookie("user_id", user.id);
   response.redirect(`/urls`);
@@ -103,18 +105,27 @@ app.post("/logout", (request, response) => {
 
 //GET REQUESTS
 app.get("/login", (request, response) => {
-  const templateVars = {
-    urls: urlDatabase,
-    user: null,
-  };
-  response.render("urls_login", templateVars);
+  const username = request.cookies["user_id"];
+  console.log(username);
+  if (username === undefined) {
+    const templateVars = {
+      urls: urlDatabase,
+      user: null,
+    };
+    response.render("urls_login", templateVars);
+  }
 });
 
 app.get("/register", (request, response) => {
-  const templateVars = {
-    user: null,
-  };
-  response.render("urls_registration", templateVars);
+  const username = request.cookies["user_id"];
+  if (username === undefined) {
+    const templateVars = {
+      urls: urlDatabase,
+      user: null,
+    };
+    response.render("urls_registration", templateVars);
+  }
+  response.redirect(`/urls`);
 });
 
 app.get("/u/:id", (request, response) => {
@@ -135,6 +146,9 @@ app.get("/urls", (request, response) => {
 //Add a GET Route to Show the Form
 app.get("/urls/new", (request, response) => {
   const username = request.cookies["user_id"];
+  if (!username) {
+    return response.redirect("/login");
+  }
   const user = users[username];
   const templateVars = {
     user: user,
@@ -148,10 +162,13 @@ app.get("/set", (request, response) => {
 });
 
 app.get("/urls/:id", (request, response) => {
+  const username = request.cookies["user_id"];
+  const user = users[username];
   const id = request.params.id;
   const templateVars = {
     id: request.params.id,
     longURL: urlDatabase[id],
+    user: user,
   };
   response.render("urls_show", templateVars);
 });
