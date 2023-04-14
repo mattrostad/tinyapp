@@ -1,18 +1,21 @@
 const express = require("express");
 const cookieSession = require("cookie-session");
 const { response } = require("express");
+const {getUserByEmail} = require('./helpers.js')
 const app = express();
 const PORT = 8080; // default port 8080
 const bcrypt = require("bcryptjs");
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieSession({
-  name: 'session',
-  keys: ["abcbasmfa4321413neo42"],
+app.use(
+  cookieSession({
+    name: "session",
+    keys: ["abcbasmfa4321413neo42"],
 
-  // Cookie Options
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
-}))
+    // Cookie Options
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  })
+);
 
 const users = {
   userRandomID: {
@@ -58,12 +61,6 @@ const urlDatabase = {
   },
 };
 
-function getUserByEmail(email) {
-  for (let user in users) {
-    if (email === users[user].email) return users[user];
-  }
-  return null;
-}
 
 //POST REQUESTS
 app.post("/register", (request, response) => {
@@ -136,7 +133,7 @@ app.post("/urls/:id/delete", (request, response) => {
 app.post("/login", (request, response) => {
   const email = request.body.email;
   const password = request.body.password;
-  const user = getUserByEmail(email);
+  const user = getUserByEmail(email, users);
   if (!user) {
     return response.status(403).send("Email not found");
   }
@@ -160,20 +157,19 @@ app.get("/login", (request, response) => {
       urls: urlDatabase,
       user: username,
     };
-    response.render("urls_login", templateVars);
-  } else {
-    response.redirect("/urls");
+    return response.render("urls_login", templateVars);
   }
+  response.redirect("/urls");
 });
 
 app.get("/register", (request, response) => {
   const username = request.session.user_id;
   if (!username) {
     const templateVars = {
-      urls: urlDatabase,
+      //urls: urlDatabase,
       user: null,
     };
-    response.render("urls_registration", templateVars);
+    return response.render("urls_registration", templateVars);
   }
   response.redirect("/urls");
 });
@@ -186,7 +182,7 @@ app.get("/u/:id", (request, response) => {
 app.get("/urls", (request, response) => {
   const username = request.session.user_id;
   if (username === undefined) {
-    response.send("Please Login");
+   return response.send("Please Login");
   }
   const user = users[username];
   const templateVars = {
