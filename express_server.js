@@ -1,12 +1,18 @@
 const express = require("express");
-const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const { response } = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const bcrypt = require("bcryptjs");
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ["abcbasmfa4321413neo42"],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
 
 const users = {
   userRandomID: {
@@ -75,12 +81,12 @@ app.post("/register", (request, response) => {
     email,
     password: bcrypt.hashSync(password, 10),
   };
-  response.cookie("user_id", user_id);
+  request.session.user_id = user_id;
   response.redirect(`/urls`);
 });
 
 app.post("/urls", (request, response) => {
-  const username = request.cookies["user_id"];
+  const username = request.session.user_id;
   if (!username) {
     return response.send("Please register and sign in to shorten URLs");
   }
@@ -91,7 +97,7 @@ app.post("/urls", (request, response) => {
 
 app.post("/urls/:id", (request, response) => {
   const id = request.params.id;
-  const username = request.cookies["user_id"];
+  const username = request.session.user_id;
   if (username === undefined) {
     response.send("Please Login");
     return;
@@ -110,7 +116,7 @@ app.post("/urls/:id", (request, response) => {
 
 app.post("/urls/:id/delete", (request, response) => {
   const id = request.params.id;
-  const username = request.cookies["user_id"];
+  const username = request.session.user_id;
   if (username === undefined) {
     response.send("Please Login");
     return;
@@ -134,21 +140,21 @@ app.post("/login", (request, response) => {
   if (!user) {
     return response.status(403).send("Email not found");
   }
-  if (!bcrypt.compareSync(password, user.password)){
+  if (!bcrypt.compareSync(password, user.password)) {
     return response.status(403).send("Password does not match.");
   }
-  response.cookie("user_id", user.id);
+  request.session.user_id = user.id;
   response.redirect(`/urls`);
 });
 
 app.post("/logout", (request, response) => {
-  response.clearCookie("user_id");
+  request.session.user_id = null;
   response.redirect("/login");
 });
 
 //GET REQUESTS
 app.get("/login", (request, response) => {
-  const username = request.cookies["user_id"];
+  const username = request.session.user_id;
   if (!username) {
     const templateVars = {
       urls: urlDatabase,
@@ -161,7 +167,7 @@ app.get("/login", (request, response) => {
 });
 
 app.get("/register", (request, response) => {
-  const username = request.cookies["user_id"];
+  const username = request.session.user_id;
   if (!username) {
     const templateVars = {
       urls: urlDatabase,
@@ -178,7 +184,7 @@ app.get("/u/:id", (request, response) => {
 });
 
 app.get("/urls", (request, response) => {
-  const username = request.cookies["user_id"];
+  const username = request.session.user_id;
   if (username === undefined) {
     response.send("Please Login");
   }
@@ -192,7 +198,7 @@ app.get("/urls", (request, response) => {
 
 //Add a GET Route to Show the Form
 app.get("/urls/new", (request, response) => {
-  const username = request.cookies["user_id"];
+  const username = request.session.user_id;
   if (!username) {
     return response.redirect("/login");
   }
@@ -210,7 +216,7 @@ app.get("/set", (request, response) => {
 
 app.get("/urls/:id", (request, response) => {
   const id = request.params.id;
-  const username = request.cookies["user_id"];
+  const username = request.session.user_id;
   if (username === undefined) {
     response.send("Please Login");
     return;
