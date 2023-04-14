@@ -106,7 +106,7 @@ app.post("/urls/:id", (request, response) => {
     response.send("This URL does not belong to you");
     return;
   }
-  urlDatabase[request.params.id] = request.body.longURL;
+  urlDatabase[request.params.id].longURL = request.body.longURL;
   response.redirect(`/urls`);
 });
 
