@@ -21,6 +21,16 @@ const users = {
   },
 };
 
+function urlsForUser(id) {
+  let usersUrls = {};
+  for (let urlId in urlDatabase) {
+    if (urlDatabase[urlId].userID === id) {
+      usersUrls[urlId] = urlDatabase[urlId];
+    }
+  }
+  return usersUrls;
+}
+
 function generateRandomString() {
   let result = "";
   const characters =
@@ -31,10 +41,15 @@ function generateRandomString() {
   }
   return result;
 }
-
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 function getUserByEmail(email) {
@@ -66,20 +81,48 @@ app.post("/register", (request, response) => {
 
 app.post("/urls", (request, response) => {
   const username = request.cookies["user_id"];
-  if(!username) {
-    return response.send("Please register and sign in to shorten URLs")
+  if (!username) {
+    return response.send("Please register and sign in to shorten URLs");
   }
   const key = generateRandomString();
-  urlDatabase[key] = request.body.longURL;
+  urlDatabase[key] = { userID: username, longURL: request.body.longURL };
   response.redirect(`/urls/${key}`);
 });
 
 app.post("/urls/:id", (request, response) => {
+  const id = request.params.id;
+  const username = request.cookies["user_id"];
+  if (username === undefined) {
+    response.send("Please Login");
+    return;
+  }
+  if (!urlDatabase[id]) {
+    response.send("This URL does not exist");
+    return;
+  }
+  if (urlDatabase[id].userID !== username) {
+    response.send("This URL does not belong to you");
+    return;
+  }
   urlDatabase[request.params.id] = request.body.longURL;
   response.redirect(`/urls`);
 });
 
 app.post("/urls/:id/delete", (request, response) => {
+  const id = request.params.id;
+  const username = request.cookies["user_id"];
+  if (username === undefined) {
+    response.send("Please Login");
+    return;
+  }
+  if (!urlDatabase[id]) {
+    response.send("This URL does not exist");
+    return;
+  }
+  if (urlDatabase[id].userID !== username) {
+    response.send("This URL does not belong to you");
+    return;
+  }
   delete urlDatabase[request.params.id];
   response.redirect(`/urls`);
 });
@@ -106,38 +149,42 @@ app.post("/logout", (request, response) => {
 //GET REQUESTS
 app.get("/login", (request, response) => {
   const username = request.cookies["user_id"];
-  console.log(username);
-  if (username === undefined) {
+  if (!username) {
     const templateVars = {
       urls: urlDatabase,
-      user: null,
+      user: username,
     };
     response.render("urls_login", templateVars);
+  } else {
+    response.redirect("/urls");
   }
 });
 
 app.get("/register", (request, response) => {
   const username = request.cookies["user_id"];
-  if (username === undefined) {
+  if (!username) {
     const templateVars = {
       urls: urlDatabase,
       user: null,
     };
     response.render("urls_registration", templateVars);
   }
-  response.redirect(`/urls`);
+  response.redirect("/urls");
 });
 
 app.get("/u/:id", (request, response) => {
-  const longURL = urlDatabase[request.params.id];
+  const longURL = urlDatabase[request.params.id].longURL;
   response.redirect(longURL);
 });
 
 app.get("/urls", (request, response) => {
   const username = request.cookies["user_id"];
+  if (username === undefined) {
+    response.send("Please Login");
+  }
   const user = users[username];
   const templateVars = {
-    urls: urlDatabase,
+    urls: urlsForUser(username),
     user: user,
   };
   response.render("urls_index", templateVars);
@@ -162,12 +209,25 @@ app.get("/set", (request, response) => {
 });
 
 app.get("/urls/:id", (request, response) => {
-  const username = request.cookies["user_id"];
-  const user = users[username];
   const id = request.params.id;
+  const username = request.cookies["user_id"];
+  if (username === undefined) {
+    response.send("Please Login");
+    return;
+  }
+  if (!urlDatabase[id]) {
+    response.send("This URL does not exist");
+    return;
+  }
+  if (urlDatabase[id].userID !== username) {
+    response.send("This URL does not belong to you");
+    return;
+  }
+  const user = users[username];
+
   const templateVars = {
     id: request.params.id,
-    longURL: urlDatabase[id],
+    longURL: urlDatabase[id].longURL,
     user: user,
   };
   response.render("urls_show", templateVars);
