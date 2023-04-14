@@ -1,7 +1,7 @@
 const express = require("express");
 const cookieSession = require("cookie-session");
 const { response } = require("express");
-const {getUserByEmail} = require('./helpers.js')
+const { getUserByEmail } = require("./helpers.js");
 const app = express();
 const PORT = 8080; // default port 8080
 const bcrypt = require("bcryptjs");
@@ -61,7 +61,6 @@ const urlDatabase = {
   },
 };
 
-
 //POST REQUESTS
 app.post("/register", (request, response) => {
   const user_id = generateRandomString();
@@ -111,6 +110,7 @@ app.post("/urls/:id", (request, response) => {
   response.redirect(`/urls`);
 });
 
+//Endpoint to allow user's to delete URLs
 app.post("/urls/:id/delete", (request, response) => {
   const id = request.params.id;
   const username = request.session.user_id;
@@ -130,6 +130,7 @@ app.post("/urls/:id/delete", (request, response) => {
   response.redirect(`/urls`);
 });
 
+//Endpoint to allow user login using email and password
 app.post("/login", (request, response) => {
   const email = request.body.email;
   const password = request.body.password;
@@ -144,6 +145,7 @@ app.post("/login", (request, response) => {
   response.redirect(`/urls`);
 });
 
+//Endpoint to allow user to logout and sends to login page
 app.post("/logout", (request, response) => {
   request.session.user_id = null;
   response.redirect("/login");
@@ -162,6 +164,7 @@ app.get("/login", (request, response) => {
   response.redirect("/urls");
 });
 
+//Endpoint to allow user to register
 app.get("/register", (request, response) => {
   const username = request.session.user_id;
   if (!username) {
@@ -182,7 +185,7 @@ app.get("/u/:id", (request, response) => {
 app.get("/urls", (request, response) => {
   const username = request.session.user_id;
   if (username === undefined) {
-   return response.send("Please Login");
+    return response.send("Please Login");
   }
   const user = users[username];
   const templateVars = {
