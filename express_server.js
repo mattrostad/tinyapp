@@ -17,18 +17,7 @@ app.use(
   })
 );
 
-const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-  },
-};
+const users = {};
 
 function urlsForUser(id) {
   let usersUrls = {};
@@ -61,6 +50,121 @@ const urlDatabase = {
   },
 };
 
+//GET REQUESTS
+app.get("/login", (request, response) => {
+  const username = request.session.user_id;
+  if (!username) {
+    const templateVars = {
+      urls: urlDatabase,
+      user: username,
+    };
+    return response.render("urls_login", templateVars);
+  }
+  response.redirect("/urls");
+});
+
+//Endpoint to allow user to register
+app.get("/register", (request, response) => {
+  const username = request.session.user_id;
+  if (!username) {
+    const templateVars = {
+      //urls: urlDatabase,
+      user: null,
+    };
+    return response.render("urls_registration", templateVars);
+  }
+  response.redirect("/urls");
+});
+
+app.get("/u/:id", (request, response) => {
+  const longURL = urlDatabase[request.params.id];
+  if (!longURL) {
+    return response.send("<h2> longURL doesn't exist</h2>");
+  }
+  response.redirect(longURL.longURL);
+});
+
+app.get("/urls", (request, response) => {
+  const username = request.session.user_id;
+  if (!username) {
+    return response.send("Please Login");
+  }
+  const user = users[username];
+  const templateVars = {
+    urls: urlsForUser(username),
+    user: user,
+  };
+  response.render("urls_index", templateVars);
+});
+
+//Add a GET Route to Show the Form
+app.get("/urls/new", (request, response) => {
+  const username = request.session.user_id;
+  if (!username) {
+    return response.redirect("/login");
+  }
+  const user = users[username];
+  const templateVars = {
+    user: user,
+  };
+  response.render("urls_new", templateVars);
+});
+
+app.get("/set", (request, response) => {
+  const a = 1;
+  response.send(`a = ${a}`);
+});
+
+app.get("/urls/:id", (request, response) => {
+  const id = request.params.id;
+  const username = request.session.user_id;
+  if (username === undefined) {
+    response.send("Please Login");
+    return;
+  }
+  if (!urlDatabase[id]) {
+    response.send("This URL does not exist");
+    return;
+  }
+  if (urlDatabase[id].userID !== username) {
+    response.send("This URL does not belong to you");
+    return;
+  }
+  const user = users[username];
+
+  const templateVars = {
+    id: request.params.id,
+    longURL: urlDatabase[id].longURL,
+    user: user,
+  };
+  response.render("urls_show", templateVars);
+});
+
+app.get("/fetch", (request, response) => {
+  response.send(`a = ${a}`);
+});
+
+app.get("/hello", (request, response) => {
+  response.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+app.get("/", (request, response) => {
+  const username = request.session.user_id;
+  if (!username) {
+    return response.redirect("/login");
+  } else {
+    return response.redirect("/urls");
+  }
+});
+
+app.get("/urls.json", (request, response) => {
+  response.json(urlDatabase);
+});
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
+
 //POST REQUESTS
 app.post("/register", (request, response) => {
   const user_id = generateRandomString();
@@ -69,7 +173,7 @@ app.post("/register", (request, response) => {
     return response
       .status(400)
       .send("User Error. Must input valid email or password");
-  } else if (getUserByEmail(email)) {
+  } else if (getUserByEmail(email, users)) {
     return response.status(400).send("Email already registered");
   }
   users[user_id] = {
@@ -147,113 +251,6 @@ app.post("/login", (request, response) => {
 
 //Endpoint to allow user to logout and sends to login page
 app.post("/logout", (request, response) => {
-  request.session.user_id = null;
+  request.session = null;
   response.redirect("/login");
-});
-
-//GET REQUESTS
-app.get("/login", (request, response) => {
-  const username = request.session.user_id;
-  if (!username) {
-    const templateVars = {
-      urls: urlDatabase,
-      user: username,
-    };
-    return response.render("urls_login", templateVars);
-  }
-  response.redirect("/urls");
-});
-
-//Endpoint to allow user to register
-app.get("/register", (request, response) => {
-  const username = request.session.user_id;
-  if (!username) {
-    const templateVars = {
-      //urls: urlDatabase,
-      user: null,
-    };
-    return response.render("urls_registration", templateVars);
-  }
-  response.redirect("/urls");
-});
-
-app.get("/u/:id", (request, response) => {
-  const longURL = urlDatabase[request.params.id].longURL;
-  response.redirect(longURL);
-});
-
-app.get("/urls", (request, response) => {
-  const username = request.session.user_id;
-  if (username === undefined) {
-    return response.send("Please Login");
-  }
-  const user = users[username];
-  const templateVars = {
-    urls: urlsForUser(username),
-    user: user,
-  };
-  response.render("urls_index", templateVars);
-});
-
-//Add a GET Route to Show the Form
-app.get("/urls/new", (request, response) => {
-  const username = request.session.user_id;
-  if (!username) {
-    return response.redirect("/login");
-  }
-  const user = users[username];
-  const templateVars = {
-    user: user,
-  };
-  response.render("urls_new", templateVars);
-});
-
-app.get("/set", (request, response) => {
-  const a = 1;
-  response.send(`a = ${a}`);
-});
-
-app.get("/urls/:id", (request, response) => {
-  const id = request.params.id;
-  const username = request.session.user_id;
-  if (username === undefined) {
-    response.send("Please Login");
-    return;
-  }
-  if (!urlDatabase[id]) {
-    response.send("This URL does not exist");
-    return;
-  }
-  if (urlDatabase[id].userID !== username) {
-    response.send("This URL does not belong to you");
-    return;
-  }
-  const user = users[username];
-
-  const templateVars = {
-    id: request.params.id,
-    longURL: urlDatabase[id].longURL,
-    user: user,
-  };
-  response.render("urls_show", templateVars);
-});
-
-app.get("/fetch", (request, response) => {
-  response.send(`a = ${a}`);
-});
-
-app.get("/hello", (request, response) => {
-  response.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
-app.get("/", (request, response) => {
-  response.send("Hello!");
-});
-
-app.get("/urls.json", (request, response) => {
-  response.json(urlDatabase);
-});
-
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
 });
